@@ -1,0 +1,8 @@
+package com.foodrescue;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface NgoRepository extends JpaRepository<Ngo, Long> {
+}
