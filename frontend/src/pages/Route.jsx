@@ -19,7 +19,7 @@ import "leaflet/dist/leaflet.css";
 // ============================================================
 
 const API_BASE =
-  "http://foodrescueai-backend.onrender.com/api/routes";
+  "https://foodrescueai-backend.onrender.com/api/routes";
 
 // ============================================================
 // DEFAULT HYDERABAD CENTER
@@ -99,7 +99,6 @@ function RouteMapController({
   destination,
   route,
 }) {
-
   const map = useMap();
 
   useEffect(() => {
@@ -112,7 +111,6 @@ function RouteMapController({
       route &&
       route.length > 1
     ) {
-
       const bounds =
         L.latLngBounds(route);
 
@@ -135,7 +133,6 @@ function RouteMapController({
       pickup &&
       destination
     ) {
-
       const bounds =
         L.latLngBounds([
           [
@@ -164,7 +161,6 @@ function RouteMapController({
     // --------------------------------------------------------
 
     if (pickup) {
-
       map.flyTo(
         [
           pickup.latitude,
@@ -184,7 +180,6 @@ function RouteMapController({
     // --------------------------------------------------------
 
     if (destination) {
-
       map.flyTo(
         [
           destination.latitude,
@@ -246,7 +241,6 @@ export default function Route() {
       // ------------------------------------------------------
 
       if (!pickup.trim()) {
-
         setError(
           "Please enter the pickup location."
         );
@@ -255,7 +249,6 @@ export default function Route() {
       }
 
       if (!destination.trim()) {
-
         setError(
           "Please enter the destination."
         );
@@ -338,7 +331,7 @@ export default function Route() {
         } else {
 
           setError(
-            "Could not connect to the backend. Make sure Spring Boot is running on port 8080."
+            "Could not connect to the backend. Please try again."
           );
         }
 
@@ -1185,7 +1178,7 @@ export default function Route() {
                         routeData
                           .destination
                           .displayName
-                    }
+                      }
                     </small>
 
                   </Popup>
