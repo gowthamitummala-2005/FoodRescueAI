@@ -31,11 +31,10 @@ public class RouteService {
 
     /*
      * Approximate Hyderabad project boundary.
-     * This prevents locations outside Hyderabad from
-     * accidentally being accepted.
      */
     private static final double MIN_LATITUDE = 17.15;
     private static final double MAX_LATITUDE = 17.60;
+
     private static final double MIN_LONGITUDE = 78.25;
     private static final double MAX_LONGITUDE = 78.70;
 
@@ -43,21 +42,20 @@ public class RouteService {
     private final ObjectMapper objectMapper;
 
     /*
-     * Cache geocoded locations so repeated searches are fast.
+     * Cache geocoded locations.
      */
     private final ConcurrentHashMap<String, Map<String, Object>>
             geocodeCache = new ConcurrentHashMap<>();
 
     /*
-     * Nominatim public service should not be hit repeatedly
-     * without a small gap.
+     * Nominatim rate-limit protection.
      */
     private volatile long lastNominatimRequestTime = 0L;
 
     public RouteService() {
 
         this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
+                .connectTimeout(Duration.ofSeconds(10))
                 .build();
 
         this.objectMapper = new ObjectMapper();
@@ -99,11 +97,8 @@ public class RouteService {
 
         try {
 
-            String cleanPickup =
-                    pickup.trim();
-
-            String cleanDestination =
-                    destination.trim();
+            String cleanPickup = pickup.trim();
+            String cleanDestination = destination.trim();
 
             // ----------------------------------------------------
             // GEOCODE PICKUP
@@ -295,15 +290,62 @@ public class RouteService {
             return new LinkedHashMap<>(cached);
         }
 
+        /*
+         * Try multiple search formats.
+         *
+         * This is important because Nominatim may not return
+         * a result for every short locality name when it is
+         * combined with a long address.
+         */
+
+        String[] queries = {
+
+                location
+                        + ", Hyderabad, Telangana, India",
+
+                location
+                        + ", Hyderabad, India",
+
+                location
+                        + ", Telangana, India"
+        };
+
+        for (String query : queries) {
+
+            Map<String, Object> result =
+                    performNominatimSearch(
+                            query,
+                            location
+                    );
+
+            if (result != null) {
+
+                geocodeCache.put(
+                        cacheKey,
+                        result
+                );
+
+                return new LinkedHashMap<>(result);
+            }
+        }
+
+        return null;
+    }
+
+    // ============================================================
+    // NOMINATIM SEARCH
+    // ============================================================
+
+    private Map<String, Object> performNominatimSearch(
+            String query,
+            String originalLocation)
+            throws IOException, InterruptedException {
+
         // --------------------------------------------------------
-        // RATE LIMIT GAP
+        // RATE LIMIT
         // --------------------------------------------------------
 
         waitForNominatim();
-
-        String query =
-                location
-                        + ", Hyderabad, Telangana, India";
 
         String encodedQuery =
                 URLEncoder.encode(
@@ -311,19 +353,39 @@ public class RouteService {
                         StandardCharsets.UTF_8
                 );
 
+        /*
+         * viewbox:
+         *
+         * left,bottom,right,top
+         *
+         * This tells Nominatim that Hyderabad is the
+         * preferred search area.
+         */
+
+        String viewBox =
+                "78.25,17.15,78.70,17.60";
+
         String url =
                 NOMINATIM_URL
                         + "?q="
                         + encodedQuery
                         + "&format=jsonv2"
-                        + "&limit=1"
+                        + "&limit=5"
                         + "&addressdetails=1"
-                        + "&countrycodes=in";
+                        + "&countrycodes=in"
+                        + "&viewbox="
+                        + viewBox
+                        + "&bounded=1";
+
+        System.out.println(
+                "Nominatim search: "
+                        + query
+        );
 
         HttpRequest request =
                 HttpRequest.newBuilder()
                         .uri(URI.create(url))
-                        .timeout(Duration.ofSeconds(10))
+                        .timeout(Duration.ofSeconds(15))
                         .header(
                                 "User-Agent",
                                 USER_AGENT
@@ -334,9 +396,6 @@ public class RouteService {
                         )
                         .GET()
                         .build();
-
-        lastNominatimRequestTime =
-                System.currentTimeMillis();
 
         HttpResponse<String> httpResponse =
                 httpClient.send(
@@ -363,66 +422,78 @@ public class RouteService {
                 || !root.isArray()
                 || root.isEmpty()) {
 
-            return null;
-        }
-
-        JsonNode place =
-                root.get(0);
-
-        double latitude =
-                place.path("lat")
-                        .asDouble(Double.NaN);
-
-        double longitude =
-                place.path("lon")
-                        .asDouble(Double.NaN);
-
-        if (Double.isNaN(latitude)
-                || Double.isNaN(longitude)) {
+            System.out.println(
+                    "Nominatim returned no results for: "
+                            + query
+            );
 
             return null;
         }
 
-        if (!isInsideHyderabad(
-                latitude,
-                longitude)) {
+        /*
+         * Check several returned results instead of only
+         * blindly accepting the first result.
+         */
 
-            return null;
+        for (JsonNode place : root) {
+
+            double latitude =
+                    place.path("lat")
+                            .asDouble(Double.NaN);
+
+            double longitude =
+                    place.path("lon")
+                            .asDouble(Double.NaN);
+
+            if (Double.isNaN(latitude)
+                    || Double.isNaN(longitude)) {
+
+                continue;
+            }
+
+            /*
+             * Make sure the location is actually within
+             * the Hyderabad project area.
+             */
+
+            if (!isInsideHyderabad(
+                    latitude,
+                    longitude)) {
+
+                continue;
+            }
+
+            String displayName =
+                    place.path("display_name")
+                            .asText(originalLocation);
+
+            Map<String, Object> point =
+                    new LinkedHashMap<>();
+
+            point.put(
+                    "name",
+                    originalLocation
+            );
+
+            point.put(
+                    "displayName",
+                    displayName
+            );
+
+            point.put(
+                    "latitude",
+                    latitude
+            );
+
+            point.put(
+                    "longitude",
+                    longitude
+            );
+
+            return point;
         }
 
-        String displayName =
-                place.path("display_name")
-                        .asText(location);
-
-        Map<String, Object> point =
-                new LinkedHashMap<>();
-
-        point.put(
-                "name",
-                location
-        );
-
-        point.put(
-                "displayName",
-                displayName
-        );
-
-        point.put(
-                "latitude",
-                latitude
-        );
-
-        point.put(
-                "longitude",
-                longitude
-        );
-
-        geocodeCache.put(
-                cacheKey,
-                point
-        );
-
-        return new LinkedHashMap<>(point);
+        return null;
     }
 
     // ============================================================
@@ -488,6 +559,11 @@ public class RouteService {
                         + "?overview=full"
                         + "&geometries=geojson"
                         + "&steps=true";
+
+        System.out.println(
+                "OSRM route request: "
+                        + url
+        );
 
         HttpRequest request =
                 HttpRequest.newBuilder()
