@@ -19,7 +19,7 @@ import "leaflet/dist/leaflet.css";
 // ============================================================
 
 const API_BASE =
-  "http://localhost:8080/api/routes";
+  "http://foodrescueai-backend.onrender.com/api/routes";
 
 // ============================================================
 // DEFAULT HYDERABAD CENTER

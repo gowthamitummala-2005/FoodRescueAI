@@ -20,7 +20,7 @@ public class CorsConfig {
                 registry
                         .addMapping("/**")
                         .allowedOrigins(
-                                "http://localhost:5173"
+                                "http://foodrescueai.netlify.app"
                         )
                         .allowedMethods(
                                 "GET",

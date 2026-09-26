@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8080/api";
+const BASE_URL = "http://foodrescueai-backend.onrender.com/api";
 
 // Find NGOs for ANY location entered by the user
 export async function findNearbyNgos(location) {

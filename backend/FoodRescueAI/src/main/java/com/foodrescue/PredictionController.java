@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/predictions")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://foodrescueai.netlify.app")
 public class PredictionController {
 
     @Autowired

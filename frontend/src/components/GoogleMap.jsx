@@ -14,7 +14,7 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api/routes`;
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
