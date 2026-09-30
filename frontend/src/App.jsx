@@ -1,69 +1,34 @@
-import "./App.css";
-import "leaflet/dist/leaflet.css";
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 
-import {
-  Navigate,
-  Route,
-  Routes,
-} from "react-router-dom";
-
-// ===============================
-// PUBLIC PAGES
-// ===============================
+// Pages
 import Landing from "./pages/Landing";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
-import Success from "./pages/Success";
-
-// ===============================
-// PROTECTED PAGES
-// ===============================
 import Dashboard from "./pages/Dashboard";
 import DonateFood from "./pages/DonateFood";
-import AIPrediction from "./pages/AIPrediction";
 import DonationHistory from "./pages/DonationHistory";
+import FoodSafety from "./pages/FoodSafety";
+import FSSAILicense from "./pages/FSSAILicense";
 import NgoPage from "./pages/NgoPage";
 import Profile from "./pages/Profile";
+import RestaurantPage from "./pages/RestaurantPage";
+import RoutePage from "./pages/Route";
+import RouteOptimization from "./pages/RouteOptimization";
+import Success from "./pages/Success";
+import AIPrediction from "./pages/AIPrediction";
 
-import FSSAILicense from "./pages/FSSAILicense";
-import FoodSafety from "./pages/FoodSafety";
-
-// ===============================
-// ROUTE PLANNER
-// IMPORTANT: NOT named Route
-// ===============================
-import RoutePlanner from "./pages/Route";
-
-
-// ===============================
-// PROTECTED ROUTE
-// ===============================
-function ProtectedRoute({ children }) {
-  const isLoggedIn =
-    localStorage.getItem("isLoggedIn") === "true";
-
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-}
-
-
-// ===============================
-// APP
-// ===============================
 function App() {
   return (
     <Routes>
 
-      {/* PUBLIC */}
-
+      {/* Landing Page */}
       <Route
         path="/"
         element={<Landing />}
       />
 
+      {/* Authentication */}
       <Route
         path="/register"
         element={<Register />}
@@ -74,111 +39,82 @@ function App() {
         element={<Login />}
       />
 
+      {/* Dashboard */}
+      <Route
+        path="/dashboard"
+        element={<Dashboard />}
+      />
+
+      {/* Food Donation */}
+      <Route
+        path="/donate-food"
+        element={<DonateFood />}
+      />
+
+      {/* Donation History */}
+      <Route
+        path="/donation-history"
+        element={<DonationHistory />}
+      />
+
+      {/* Food Safety */}
+      <Route
+        path="/food-safety"
+        element={<FoodSafety />}
+      />
+
+      {/* FSSAI */}
+      <Route
+        path="/fssai-license"
+        element={<FSSAILicense />}
+      />
+
+      {/* NGOs */}
+      <Route
+        path="/ngos"
+        element={<NgoPage />}
+      />
+
+      {/* Profile */}
+      <Route
+        path="/profile"
+        element={<Profile />}
+      />
+
+      {/* Restaurants - NEW */}
+      <Route
+        path="/restaurants"
+        element={<RestaurantPage />}
+      />
+
+      {/* Route / Map */}
+      <Route
+        path="/route"
+        element={<RoutePage />}
+      />
+
+      {/* Route Optimization */}
+      <Route
+        path="/route-optimization"
+        element={<RouteOptimization />}
+      />
+
+      {/* AI Prediction */}
+      <Route
+        path="/ai-prediction"
+        element={<AIPrediction />}
+      />
+
+      {/* Success */}
       <Route
         path="/success"
         element={<Success />}
       />
 
-
-      {/* PROTECTED */}
-
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/donate-food"
-        element={
-          <ProtectedRoute>
-            <DonateFood />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/ai-prediction"
-        element={
-          <ProtectedRoute>
-            <AIPrediction />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/donations"
-        element={
-          <ProtectedRoute>
-            <DonationHistory />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/ngo"
-        element={
-          <ProtectedRoute>
-            <NgoPage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/fssai-license"
-        element={
-          <ProtectedRoute>
-            <FSSAILicense />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/food-safety"
-        element={
-          <ProtectedRoute>
-            <FoodSafety />
-          </ProtectedRoute>
-        }
-      />
-
-
-      {/* ===============================
-          NEW ROUTE PLANNER
-          =============================== */}
-
-      <Route
-        path="/route"
-        element={
-          <ProtectedRoute>
-            <RoutePlanner />
-          </ProtectedRoute>
-        }
-      />
-
-
-      {/* FALLBACK */}
-
+      {/* Fallback */}
       <Route
         path="*"
-        element={
-          <Navigate
-            to="/"
-            replace
-          />
-        }
+        element={<Landing />}
       />
 
     </Routes>
